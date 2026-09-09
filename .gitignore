@@ -1,0 +1,36 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+
+# next.js
+/.next/
+/out/
+/build
+
+# env
+.env
+.env.local
+.env*.local
+.env.production
+
+# misc
+.DS_Store
+*.pem
+*.log
+server.log
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# prisma
+node_modules/.prisma/
+
+# editor
+.vscode/
+.idea/
+
+# uploads
+/public/uploads/*
+!/public/uploads/.gitkeep

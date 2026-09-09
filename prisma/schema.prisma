@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  MEMBER
+}
+
+enum Status {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  REVIEW
+  DONE
+  BLOCKED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(MEMBER)
+  color     String   @default("#1e5fd6")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdTasks    Task[]        @relation("TaskCreatedBy")
+  assignedTasks   Task[]        @relation("TaskAssignee")
+  createdProjects Project[]
+  updates         TaskUpdate[]
+  comments        Comment[]
+  attachments     Attachment[]
+
+  @@map("users")
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  color       String   @default("#5c6874")
+  description String?
+  archived    Boolean  @default(false)
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy User   @relation(fields: [createdById], references: [id])
+  tasks     Task[]
+
+  @@map("projects")
+}
+
+model Task {
+  id            String    @id @default(cuid())
+  number        Int       @unique @default(autoincrement())
+  title         String
+  description   String?
+  status        Status    @default(TODO)
+  progress      Int       @default(0)
+  priority      Priority  @default(MEDIUM)
+  order         Float     @default(0)
+  dueDate       DateTime?
+  startedAt     DateTime?
+  completedAt   DateTime?
+  blockedReason String?
+  assigneeId    String?
+  createdById   String
+  projectId     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  assignee    User?        @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  createdBy   User         @relation("TaskCreatedBy", fields: [createdById], references: [id])
+  project     Project?     @relation(fields: [projectId], references: [id])
+  updates     TaskUpdate[]
+  comments    Comment[]
+  subtasks    Subtask[]
+  attachments Attachment[]
+
+  @@index([status])
+  @@index([assigneeId])
+  @@index([projectId])
+  @@map("tasks")
+}
+
+model TaskUpdate {
+  id           String   @id @default(cuid())
+  taskId       String
+  authorId     String
+  note         String?
+  progressFrom Int?
+  progressTo   Int?
+  statusFrom   Status?
+  statusTo     Status?
+  createdAt    DateTime @default(now())
+
+  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id])
+
+  @@index([taskId, createdAt])
+  @@map("task_updates")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  taskId    String
+  authorId  String
+  body      String
+  createdAt DateTime @default(now())
+
+  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id])
+
+  @@index([taskId, createdAt])
+  @@map("comments")
+}
+
+model Subtask {
+  id     String  @id @default(cuid())
+  taskId String
+  title  String
+  done   Boolean @default(false)
+  order  Float   @default(0)
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@map("subtasks")
+}
+
+model Attachment {
+  id           String   @id @default(cuid())
+  taskId       String
+  url          String
+  name         String
+  size         Int
+  mime         String
+  uploadedById String
+  createdAt    DateTime @default(now())
+
+  task       Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploadedBy User @relation(fields: [uploadedById], references: [id])
+
+  @@index([taskId])
+  @@map("attachments")
+}
