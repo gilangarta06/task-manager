@@ -29,8 +29,9 @@ export function signSession(payload: SessionPayload) {
 }
 
 export function verifySession(token: string): SessionPayload | null {
+  const secret = getSecret();
   try {
-    return jwt.verify(token, getSecret()) as SessionPayload;
+    return jwt.verify(token, secret) as SessionPayload;
   } catch {
     return null;
   }
