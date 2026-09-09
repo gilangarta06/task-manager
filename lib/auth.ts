@@ -1,10 +1,12 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-const SECRET = process.env.JWT_SECRET;
-
-if (!SECRET) {
-  throw new Error("JWT_SECRET environment variable is required. Set it in .env");
+function getSecret() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error("JWT_SECRET environment variable is required. Set it in .env");
+  }
+  return secret;
 }
 
 export interface SessionPayload {
@@ -23,12 +25,12 @@ export function verifyPassword(plain: string, hash: string) {
 }
 
 export function signSession(payload: SessionPayload) {
-  return jwt.sign(payload, SECRET as string, { expiresIn: "30d" });
+  return jwt.sign(payload, getSecret(), { expiresIn: "30d" });
 }
 
 export function verifySession(token: string): SessionPayload | null {
   try {
-    return jwt.verify(token, SECRET as string) as SessionPayload;
+    return jwt.verify(token, getSecret()) as SessionPayload;
   } catch {
     return null;
   }
